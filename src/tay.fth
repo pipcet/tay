@@ -12,6 +12,9 @@ variable () js[] () !
 : js{}) () @ $> drop js-markers @ $> sp@ 1+ - js{}() ;
 : js{}( sp@ js-markers @ >$ ['] js{}) () @ >$ ;
 
+: jsnew) () @ $> drop js-markers @ $> sp@ 1+ - jsnew() ;
+: jsnew( sp@ js-markers @ >$ ['] jsnew) () @ >$ ;
+
 : $$ parse-name js"" $@ ; immediate
 : $$ parse-name js"" postpone literal postpone $@ ; compile-only
 

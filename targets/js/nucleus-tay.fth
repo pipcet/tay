@@ -1067,6 +1067,19 @@ code js{}()
     H[SP] = H[SP].apply(t, args);
 end-code
 
+code jsnew()
+    var args = [];
+
+    for (i = 0; i < top; i++)
+        args.push(H[SP+top-i]);
+
+    SP += top + 1;
+
+    //console.log(H[SP] + "(" + typeof(H[SP]) + ")");
+    //console.log(args + "(" + typeof(args) + ")");
+    H[SP] = new H[SP](...args);
+end-code
+
 code find-own-level
     SP = SP + 1;
     for (i = H[SP].length - 1; i >= 0; i--) {
