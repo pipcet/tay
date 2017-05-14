@@ -67,4 +67,4 @@ js{} l-dicts $,
   :: for a @ $# 0 2dup <> if do a @ i $@ over execute loop else 2drop then ;;
   :: += dup $ n 0 2dup <> if do i over $ nth dup js. a @ >$ loop else 2drop then drop ;;
 } ;
-: inc ::( 1 + );; execute ;
+\ : inc ::( 1 + );; execute ;
