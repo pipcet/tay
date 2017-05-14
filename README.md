@@ -1,44 +1,36 @@
-( Subset of Forth94 )
+This is an experimental extension of Lars Brinkhoff's excellent
+lbForth to support JavaScript values as primitive types; that way, we
+gain first-class functions, nested functions and local variables, some
+degree of object orientation, garbage collection, string values,
+floating point support (in the future) and dynamic memory management,
+all in a few modified lines of code.
 
-This is a self-hosted implementation of Forth, which can regenerate
-itself from Forth source code.  The bootstrapping process uses a
-[metacompiler written in Lisp](https://github.com/larsbrinkhoff/forth-metacompiler) to target a
-small inner interpreter and a handful of code words written in C.  A
-new [metacompiler written in Forth](lib/meta.fth) generates an x86
-executable using using [assembly language code words](targets/x86/nucleus.fth).
+== Build instructions ==
 
-There are also ARM, RISC-V, Motorola 68000, PDP-11, and asm.js
-targets, and target assemblers for 6502, AVR, MSP430, and Emacs
-bytecodes.
+(This isn't very polished right now.)
 
-( Continuous integration )
+Make sure `js` is in the path *and refers to the SpiderMonkey shell*. Nodejs is currently broken.  Also make sure to give the build process enough time (several minutes); the final product isn't that slow, but the intermediate Forth-y abomination is.
 
-The code is continuously built and tested in Linux, MacOS X, and
-Windows using several cloud-based continuous integration services.
-This is documented in [build.md](build.md).
+```
+$ make clean
+$ make TARGET=js
+$ make tay
+$ js tay.js
+```
 
-( Further reading )
+== ok ==
 
-[INSTALL](INSTALL) \ How to build.  
-[doc](doc) \ Classic (and recent) texts not related to this project.  
-[lib/README](lib/README) \ Information about libraries.  
-[targets/README.md](targets/README.md) \ Information about current and possibly future targets.
+There should be an `ok` prompt. You can enter most Forth expressions and they should work fine, but there are additional data types, words, and semantics:
 
-( Implementation guide )
+=== Data types ===
 
-The Forth kernel contains everything needed to read and compile the
-rest of the system from source code, and not much else.  It's composed
-of two parts: a target-specific file nucleus.fth containing all
-primitive CODE words, and a [target-independent
-kernel.fth](src/kernel.fth).  These two are compiled by the
-metacompiler.
+Forth treats all cells as integers. Tay treats every cell as a JavaScript value: a floating-point number, string, or object; two particular kinds of object are arrays and references.
 
-The [C target nucleus](targets/c/nucleus.fth) used for bootstrapping
-has only twelve proper primitives.  There is also the COLD word which
-compiles to main(), and four I/O words.
+=== First-class functions ===
 
-When the kernel starts, it jumps to the word called WARM.  This is
-responsible for loading the rest of the system and entering the text
-interpreter.  The first file loaded by WARM is [core.fth](src/core.fth),
-which implements the CORE wordset.  Because the kernel only has a bare
-minimum of words, the start of core.fth looks a little strange.
+You can build a function by placing a word (which can be anonymous, but doesn't have to be) in an array, and not linking it to the main dictionary.  Unlike Forth, you can do so in the middle of building another dictionary entry in another array.  The words `::(` and `);;` provide a convenient way of doing so:
+
+```
+: inc ::( 1 + );; execute ;
+```
+

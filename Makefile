@@ -49,8 +49,9 @@ uninstall:
 	rm -rf $(sysdir)
 
 tay:
-	echo "include targets/js/meta-tay.fth" | ~/jsshell-nightly-20160904/js ./forth2.js | tail +3 > 2tay.js
-	~/jsshell-nightly-20160904/js 2tay.js  > tay.js
+	js ./forth > forth2.js
+	echo "include targets/js/meta-tay.fth" | js ./forth2.js | tail +3 > 2tay.js
+	js 2tay.js  > tay.js
 
 web:
 	make tforth TARGET=asmjs
