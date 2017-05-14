@@ -69,8 +69,10 @@ create squote   128 allot
 : parse"   [char] " parse ;
 : s,   dup , ", ;
 : ,s"   parse" s, ;
+: s,,   js"" , ;
+: ,,s"  parse" s,, ;
 : s"   parse" >r squote r@ cmove  squote r> ;
-: s"   postpone (sliteral) ,s" ; compile-only
+: s"   postpone (sliteral) ,,s" ; compile-only
 : ,s"  postpone s" postpone s, ; compile-only
 : ,"   parse" move, ;
 : ,"   postpone s" postpone move, ; compile-only
@@ -143,7 +145,7 @@ create base  10 ,
 : .       ?.- u. ;
 
 : ."   [char] " parse type ;
-: ."   postpone s"  postpone type ; compile-only
+: ."   postpone s" postpone type ; compile-only
 
 : postpone-number   undef ;
 ' postpone-number  ' postpone-xt >body cell+ !

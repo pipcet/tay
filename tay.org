@@ -1,0 +1,77 @@
+Tay is a Forth-like language, based on Lars Brinkhoff's excellent lbForth. Tay provides first-class functions, strings, and floating-point numbers; variable-length arrays; and some degree of object orientation and garbage collection.
+
+The basic idea is to use JavaScript values as primitive values, and to replace "memory access" with JS array accesses.
+
+* todo
+* operators
+** =$= : immediate method call
+*** example
+
+#+BEGIN_SRC tay
+: f { :: hi ." hi" cr ;; } ;
+
+f $ hi
+#+END_SRC
+
+** =$ref=: create a reference from an arena and offset
+** =$o=, =$i=: decompose reference
+** =js.=: print using toString
+
+#+BEGIN_SRC tay
+s" hi" js"" js.
+#+END_SRC
+
+** =$!=: indexed assignment
+
+#+BEGIN_SRC tay
+js[] value a
+
+42 a 3 $!
+a 3 $@ js.
+#+END_SRC
+
+** =$@=: indexed retrieval
+** =$#=: arena length
+
+#+BEGIN_SRC tay
+js[] value a
+
+42 a 3 $!
+a $# js.
+#+END_SRC
+
+** =$0=: first element
+** =$?=: last element
+** =$#!=: truncate
+** =$,=: compile
+** =$here=: dictionary/compile pointer
+** =$*=: elements
+** =$&=: references
+** =>$=: push
+** =$<=: unshift
+** =$>=: pop
+** =<$=: shift
+** =js""=: convert Forth string
+
+#+BEGIN_SRC tay
+s" hi" js"" js.
+#+END_SRC
+
+** =js"=: immediate string
+
+#+BEGIN_SRC tay
+js" hi" js.
+#+END_SRC
+
+** =js[]=, =js-array=: create array
+** =js-in=: test index existence
+** =js{}=, =js-object=: create generic object
+** =$in=: array of indices
+** =$of=: array of iterated values
+** =js()=: JS function call
+** =js{}()=: JS function call with object (this) argument
+** =js=: JS global object
+** =::=: nested =:=
+** =;;=: nested =;=
+
+

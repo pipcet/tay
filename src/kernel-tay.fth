@@ -74,11 +74,12 @@ forward: <
 : count    dup 1+ swap c@ ;
 
 : aligned   ;
-?: (sliteral)   r> dup @ swap cell+ 2dup + aligned >r swap ;
+\ ?: (sliteral)   r> dup @ swap cell+ 2dup + aligned >r swap ;
+?: (sliteral)   r> dup @ swap cell+ >r fth"" ;
 
 : i    r> r@ swap >r ;
 ?: cr   10 emit ;
-: type   ?dup if bounds do i c@ emit loop else drop then ;
+: type   2dup js. js. cr cr cr ?dup if bounds do i c@ emit loop else drop then ;
 
 \ Put the xt inside the definition of EXECUTE, overwriting the last noop.
 ?: execute   [ here cell + ] ['] noop ! then noop ;
@@ -106,7 +107,7 @@ include dictionary.fth
 
 0 value stdin
 
-include target.fth
+include target-tay.fth
 
 : lowercase? ( c -- flag )   dup [char] a < if drop 0 exit then [ char z 1+ ] literal < ;
 : upcase ( c1 -- c2 )   dup lowercase? if [ char A char a - ] literal + then ;
@@ -118,7 +119,7 @@ include target.fth
       dup c@ i c@ c<> if drop unloop 0 exit then
       1+
   loop drop -1 ;
-: nt= ( ca u nt -- flag )   >name name= ;
+: nt= ( ca u nt -- flag )   -rot js"" swap 1+ @ js=== ;
 
 : immediate?   >nfa c@ 127 swap < if 1 else -1 then ;
 
@@ -191,7 +192,7 @@ create context  9 cells allot
 ?: ref ;
 ?: $@ ;
 ?: $? ;
-: find-name ( a u -- a u 0 | xt ? )   l-dicts $here if 2dup js"" l-dicts $? swap js-in if js"" l-dicts $? swap $@ -1 exit then then swap over #name min context
+: find-name ( a u -- a u 0 | xt ? )   l-dicts $here if 2dup js"" l-dicts $? swap js-in if js"" l-dicts $? swap $@ -1 exit then then swap over context
    search-context ?dup if rot drop else swap 0 then ;
 
 : source   'source @  #source @ ;
@@ -281,15 +282,15 @@ defer parsed
    file-input interpreting  source-id close-file drop  0 'source !
    2r> 2 restore-input abort" Bad restore-input" ;
 
-: +string   2dup 2>r + over >r swap cmove r> 2r> rot + ;
+: +string  2dup 2>r + over >r swap cmove r> 2r> rot + ;
 : pathname   >r 2dup r> >name here 0 +string +string ;
 : ?include   if drop 1 else >r 2drop r> include-file 0 0 then ;
-: ?open ( a u nt -- a u 1 | 0 0 ) pathname r/o open-file ?include ;
+: ?open ( a u nt -- a u 1 | 0 0 ) 3dup ." ?open" cr js. js. js. cr pathname r/o open-file ?include ;
 : ?error   abort" File not found" ;
 : search-file   ['] search-paths ['] ?open traverse-wordlist ?error ;
 : >current ( wl1 -- ) ( R: -- wl2 ) current @ r> 2>r  current ! ;
 : current>   r> r> current ! >r ;
-: +name ( a u wl -- ) >current header, 0 , reveal current> ;
+: +name ( a u wl -- ) >current 2dup js"" js. header, 0 , reveal current> ;
 : remember-file   ['] included-files +name ;
 : included   2dup remember-file search-file ;
 : searched ( a u -- ) ['] search-paths +name ;
@@ -325,7 +326,7 @@ defer quit
    s" " searched
 
    [compile] [
-   s" load.fth" included
+   s" load-tay.fth" included
    ." ok" cr
    quit ;
 

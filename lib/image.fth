@@ -7,9 +7,9 @@
 
 
 [undefined] t-cell [if]
-4 constant t-cell
+1 constant t-cell
 [then]
-4000 t-cell * constant t-size
+64000 constant t-size
 
 create t-image  t-size allot  t-image t-size erase
 
@@ -44,12 +44,16 @@ variable stop  0 stop !
 : search   prev begin @ ?dup while ?section repeat ;
 : t-end   t-image t-size + t-delta @ - ;
 : current?   start @ t-end within ;
-: >host   dup current? if t-delta @ + else search then ;
+: >host   dup current? if 4 * t-delta @ + else search then ;
 
 \ Read and write a target character.
 
-: t-c@   >host c@ ;
-: t-c!   >host c! ;
+: t-c@   >host @ ;
+[defined] final [if]
+: t-c! 2dup ." HEAP[" . ." ] = " cr jsexp cr ." ;"  cr >host ! ;
+[else]
+: t-c! 2dup ." HEAP[" . ." ] = " . ." ;"  cr >host ! ;
+[then]
 
 \ Move the target dictionary pointer, and start a new section.
 

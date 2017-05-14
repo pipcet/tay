@@ -48,6 +48,10 @@ uninstall:
 	rm $(bindir)/forth
 	rm -rf $(sysdir)
 
+tay:
+	echo "include targets/js/meta-tay.fth" | ~/jsshell-nightly-20160904/js ./forth2.js | tail +3 > 2tay.js
+	~/jsshell-nightly-20160904/js 2tay.js  > tay.js
+
 web:
 	make tforth TARGET=asmjs
 	cp asmjs-forth forth.js
