@@ -8,8 +8,6 @@
 : docon,   'docon , ;
 : dodef,   'dodef , ;
 
-: NAME_LENGTH 16 ;
-: #name ( -- u )       NAME_LENGTH 1 - ;
 : name, ( a u -- )     1 , js"" , ;
 : header, ( a u -- )   align here >r name, r> link, 0 , ;
 : header,, ( a u -- )  here >r name, r> link, 0 , ;

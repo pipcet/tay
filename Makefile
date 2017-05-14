@@ -64,3 +64,5 @@ include check.mk
 
 clean: t-clean
 	rm -f forth *-forth test-* *-stamp *.exe conf.mk forth.html forth.js
+
+.PHONY: tay

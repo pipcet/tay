@@ -186,7 +186,7 @@ variable leaves
 
 create env-words  0 , ' included-files ,
 : env-query   dup if drop execute -1 then ;
-: environment?   #name min [ ' env-words ] literal search-wordlist env-query ;
+: environment?  [ ' env-words ] literal search-wordlist env-query ;
 : environment   [ ' env-words ] literal relink ;
 
 : core ; environment
