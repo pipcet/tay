@@ -18,8 +18,6 @@ function MainScope()
 
 MainScope.prototype = Object.create(Array.prototype);
 
-var HEAP = new MainScope;
-
 function Reference(o, i)
 {
     this.o = o;
