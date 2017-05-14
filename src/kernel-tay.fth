@@ -79,7 +79,7 @@ forward: <
 
 : i    r> r@ swap >r ;
 ?: cr   10 emit ;
-: type   2dup js. js. cr cr cr ?dup if bounds do i c@ emit loop else drop then ;
+: type   ?dup if bounds do i c@ emit loop else drop then ;
 
 \ Put the xt inside the definition of EXECUTE, overwriting the last noop.
 ?: execute   [ here cell + ] ['] noop ! then noop ;
@@ -285,12 +285,12 @@ defer parsed
 : +string  2dup 2>r + over >r swap cmove r> 2r> rot + ;
 : pathname   >r 2dup r> >name here 0 +string +string ;
 : ?include   if drop 1 else >r 2drop r> include-file 0 0 then ;
-: ?open ( a u nt -- a u 1 | 0 0 ) 3dup ." ?open" cr js. js. js. cr pathname r/o open-file ?include ;
+: ?open ( a u nt -- a u 1 | 0 0 ) pathname r/o open-file ?include ;
 : ?error   abort" File not found" ;
 : search-file   ['] search-paths ['] ?open traverse-wordlist ?error ;
 : >current ( wl1 -- ) ( R: -- wl2 ) current @ r> 2>r  current ! ;
 : current>   r> r> current ! >r ;
-: +name ( a u wl -- ) >current 2dup js"" js. header, 0 , reveal current> ;
+: +name ( a u wl -- ) >current header, 0 , reveal current> ;
 : remember-file   ['] included-files +name ;
 : included   2dup remember-file search-file ;
 : searched ( a u -- ) ['] search-paths +name ;
