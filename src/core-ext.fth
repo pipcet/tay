@@ -7,7 +7,7 @@
 
 : 2r@   r> 2r> 2dup 2>r rot >r ;
 
-: :noname   noheader, docol, ] latestxt !csp ;
+: :noname   noheader, docol, ] latestxt ;
 
 : (?do)   r> 2r> 2dup > rot rot 2>r swap >r ;
 : ?do   leaves @  0 leaves !

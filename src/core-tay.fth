@@ -273,7 +273,7 @@ create terminal-source   tib 0 ' terminal-refill ' ok source,
 : rp\   s" rp!" find-name if drop postpone \ else 2drop then ;
 rp\ : rp!   postpone (literal) RP , postpone ! ; immediate
 
-: (quit)   rp0 rp!  0 csp !  postpone [  terminal-input interpreting  bye ;
+: (quit)   rp0 rp!  postpone [  terminal-input interpreting  bye ;
 
 ' (quit) ' quit >body !
 

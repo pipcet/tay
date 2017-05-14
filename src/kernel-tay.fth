@@ -220,14 +220,7 @@ create interpreters  ' execute , ' number , ' execute ,
 : ]   1 state !  ['] compile, interpreters !
    also ['] compiler-words context ! ;
 
-variable csp
-
-: .latest   latestxt >name type ;
-: ?bad   rot if type ."  definition: " .latest cr abort then 2drop ;
-: !csp   csp @ s" Nested" ?bad  sp@ csp ! ;
-: ?csp   sp@ csp @ <> s" Unbalanced" ?bad  0 csp ! ;
-
-: ;   reveal compile exit [compile] [ 0 csp ! ; immediate
+: ;   reveal compile exit [compile] [ ; immediate
 
 \ ----------------------------------------------------------------------
 
