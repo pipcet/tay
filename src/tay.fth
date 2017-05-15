@@ -42,7 +42,9 @@ js{} l-dicts $,
 
 : create-reference swap drop l-dicts $? swap $ref ;
 
-: variable state @ 0 = if variable else parse-name js"" l-dicts $# 1- constant-function over constant-function compose ['] create-reference compose l-dicts $? rot $! then ; immediate
+: {}-variable parse-name js"" l-dicts $# 1- constant-function over constant-function compose ['] create-reference compose l-dicts $? rot $!; immediate
+
+: variable state @ 0 = if variable else {}-variable then ; immediate
 
 : : state @ 0 = if ['] : execute else latest dp @ parse-name 2dup js[] 8 $ref dp ! header,, docol, js"" [ ' ] , ] then ; immediate
 
