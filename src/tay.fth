@@ -32,6 +32,10 @@ js{} l-dicts $,
 : new{} >r js $$ Object $$ create js( r> ) ;
 : n{} ( proto previous -- new ) swap >r >r js $$ Object $$ create js( r> ) dup js" proto" r> -rot $! ;
 
+: {} l-dicts $? postpone literal postpone l-dicts postpone $? postpone n{} ; immediate
+
+: {+ parse-name find-name drop dup , postpone dup postpone l-dicts postpone >$ execute js" proto" $@ l-dicts >$ ; immediate
+
 : { l-dicts $? new{} dup l-dicts $, postpone literal postpone l-dicts postpone $? postpone n{} postpone l-dicts postpone $, ; immediate
 : } l-dicts $> drop postpone l-dicts postpone $> ; immediate
 
@@ -72,3 +76,6 @@ js{} l-dicts $,
 \ : inc :( 1 + ); execute ;
 
 : nested { variable a { variable b } { variable b } } drop ;
+
+\ : heap [ list js" proto" $@ l-dicts >$ ] variable here : compile a @ here @ $! here @ 1+ here ! ; {} ;
+: heap {+ list variable here : compile a @ here @ $! 1 here !+ ; } ;
