@@ -34,8 +34,6 @@ js{} l-dicts $,
 
 : {} l-dicts $? postpone literal postpone l-dicts postpone $? postpone n{} ; immediate
 
-: {+ parse-name find-name drop dup , postpone dup postpone l-dicts postpone >$ execute js" proto" $@ l-dicts >$ ; immediate
-
 : { l-dicts $? new{} dup l-dicts $, postpone literal postpone l-dicts postpone $? postpone n{} postpone l-dicts postpone $, ; immediate
 : } l-dicts $> drop postpone l-dicts postpone $> ; immediate
 
@@ -43,7 +41,7 @@ js{} l-dicts $,
 
 : compose swap latest dp @ js[] 8 $ref dp ! s" " header,, docol, rot , rot , ['] exit , dp ! latest swap dup latest! ;
 
-: create-reference swap l-dicts $? begin over over js" proto" $@ js=== 0= while ." up 1" cr js" __proto__" $@ repeat swap drop swap $ref ;
+: create-reference swap l-dicts $? begin over over js" proto" $@ js=== 0= while js" __proto__" $@ repeat swap drop swap $ref ;
 
 : {}-variable parse-name js"" l-dicts $? constant-function over constant-function compose ['] create-reference compose l-dicts $? rot $! ;
 
@@ -78,4 +76,4 @@ js{} l-dicts $,
 : nested { variable a { variable b } { variable b } } drop ;
 
 \ : heap [ list js" proto" $@ l-dicts >$ ] variable here : compile a @ here @ $! here @ 1+ here ! ; {} ;
-: heap {+ list variable here : compile a @ here @ $! 1 here !+ ; } ;
+: heap { variable l list l ! variable here : compile this $ a @ here @ $! 1 here !+ ; } ;
