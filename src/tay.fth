@@ -4,6 +4,7 @@
 variable js-markers js[] js-markers !
 variable () js[] () !
 
+: immediate immediate ; immediate
 : ) () @ $? execute ;
 
 : js) () @ $> drop js-markers @ $> sp@ 1+ - js() ;
