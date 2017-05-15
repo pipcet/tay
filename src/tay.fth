@@ -73,7 +73,10 @@ js{} l-dicts $,
 } ;
 \ : inc :( 1 + ); execute ;
 
+list $$ proto value list{}
+
 : nested { variable a { variable b } { variable b } } drop ;
 
 \ : heap [ list js" proto" $@ l-dicts >$ ] variable here : compile a @ here @ $! here @ 1+ here ! ; {} ;
-: heap { variable l list l ! variable here : compile this $ a @ here @ $! 1 here !+ ; } ;
+: heap { variable here : compile this $ a @ here @ $! 1 here !+ ; } ;
+: times over 0 do dup execute loop 2drop ;
