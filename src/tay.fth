@@ -44,8 +44,9 @@ js{} l-dicts $,
 
 : {}-variable parse-name js"" l-dicts $# 1- constant-function over constant-function compose ['] create-reference compose l-dicts $? rot $! ; immediate
 
-: :: latest dp @ parse-name 2dup js[] 8 $ref dp ! header,, docol, js"" ] ; immediate
-: ;; ['] exit , latest swap l-dicts $? swap $! dp ! dup latest! ; immediate
+: : state @ 0 = if ['] : execute else latest dp @ parse-name 2dup js[] 8 $ref dp ! header,, docol, js"" [ ' ] , ] then ; immediate
+
+: ; state @ 1 <> if ['] exit , [ ' [ , ] latest swap l-dicts $? swap $! dp ! dup latest! else ['] ; execute then ; immediate
 
 : {}-execute ( scope xt -- * ) swap l-dicts $, execute l-dicts $> drop ;
 : $ dup js" proto" $@ parse-name js"" $@ {}-execute ;
@@ -53,18 +54,18 @@ js{} l-dicts $,
 
 : this l-dicts $? ;
 
-: ::( latest dp @ s" " 2dup js[] 8 $ref dp ! header,, docol, js"" drop ] ; immediate
-: );; ['] exit , latest >r dp ! dup latest! r> postpone literal ; immediate
+: :( latest dp @ s" " 2dup js[] 8 $ref dp ! header,, docol, js"" drop ['] ] execute ; immediate
+: ); ['] exit , ['] [ execute latest >r dp ! dup latest! r> postpone literal ; immediate
 
 : list {
   {}-variable a js[] a !
-  :: push a @ >$ ;;
-  :: pop a @ $> ;;
-  :: shift a @ <$ ;;
-  :: unshift a @ >$ ;;
-  :: n a @ $# ;;
-  :: nth a @ swap $@ ;;
-  :: for a @ $# 0 2dup <> if do a @ i $@ over execute loop else 2drop then ;;
-  :: += dup $ n 0 2dup <> if do i over $ nth dup js. a @ >$ loop else 2drop then drop ;;
+  : push a @ >$ ;
+  : pop a @ $> ;
+  : shift a @ <$ ;
+  : unshift a @ >$ ;
+  : n a @ $# ;
+  : nth a @ swap $@ ;
+  : for a @ $# 0 2dup <> if do a @ i $@ over execute loop else 2drop then ;
+  : += dup $ n 0 2dup <> if do i over $ nth dup js. a @ >$ loop else 2drop then drop ;
 } ;
-\ : inc ::( 1 + );; execute ;
+\ : inc :( 1 + ); execute ;

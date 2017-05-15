@@ -216,8 +216,8 @@ create interpreters  ' execute , ' number , ' execute ,
 : ?exception   if cr ." Exception!" cr then ;
 : interpret-xt   1+ cells  interpreters + @ catch ?exception ;
 
-: [   0 state !  ['] execute interpreters !  previous ; immediate
-: ]   1 state !  ['] compile, interpreters !
+: [   state @ 1 - state !  ['] execute interpreters !  previous ; immediate
+: ]   state @ 1 + state !  ['] compile, interpreters !
    also ['] compiler-words context ! ;
 
 : ;   reveal compile exit [compile] [ ; immediate
@@ -317,6 +317,8 @@ defer quit
    s" src/" searched \ UGLY HACK
    sysdir searched
    s" " searched
+
+   1 state !
 
    [compile] [
    s" load-tay.fth" included
