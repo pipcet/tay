@@ -356,7 +356,6 @@ function foreign_read_file(addr, u1, fileid)
 
 function lbForth(stdlib, foreign, buffer)
 {
-    "use asm";
     var imul = stdlib.Math.imul;
     var add = function (a, b)
     {
@@ -527,36 +526,36 @@ code -
 end-code
 
 code >r  ( x -- ) ( R: -- x )
-    SP = SP+1;
+    SP = SP + 1;
     RP = RP - 1;
     H[RP] = top;
 end-code
 
 code r> ( -- x ) ( R: x -- )
     x = H[RP];
-    RP = RP+1;
-    SP = SP-1;
+    RP = RP + 1;
+    SP = SP - 1;
     H[SP] = x;
 end-code
 
 code 2r>
     x = H[RP];
-    RP = RP+1;
+    RP = RP + 1;
     y = H[RP];
-    RP = RP+1;
-    SP = SP-1;
+    RP = RP + 1;
+    SP = SP - 1;
     H[SP] = y;
-    SP = SP-1;
+    SP = SP - 1;
     H[SP] = x;
 end-code
 
 code 2>r
-    SP = SP+1;
+    SP = SP + 1;
     y = H[SP];
-    SP = SP+1;
-    RP = RP-1;
+    SP = SP + 1;
+    RP = RP - 1;
     H[RP] = y;
-    RP = RP-1;
+    RP = RP - 1;
     H[RP] = top;
 end-code
 
@@ -1108,7 +1107,9 @@ start-code
 
     var start = Date.now();
     while (1) {
-        f[deref(word,4)|0]();
+        var ret = f[deref(word,4)|0]();
+        if (ret !== undefined)
+            return ret;
         word = deref(IP, 0);
         IP = add(IP, 1);
     }
