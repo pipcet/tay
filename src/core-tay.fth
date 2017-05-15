@@ -3,7 +3,7 @@ drop
 
 parse-name : header, docol, ]   parse-name header, docol, ] exit [ reveal
 
-: immediate   latestxt >nfa dup c@ negate swap c! ;
+: immediate   -1 latestxt >nfa ! ;
 : \   refill drop ; immediate
 
 \ This is the first file to be loaded and compiled by the kernel.
