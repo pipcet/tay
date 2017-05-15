@@ -62,7 +62,7 @@ js{} l-dicts $,
   : push a @ >$ ;
   : pop a @ $> ;
   : shift a @ <$ ;
-  : unshift a @ >$ ;
+  : unshift a @ $< ;
   : n a @ $# ;
   : nth a @ swap $@ ;
   : for a @ $# 0 2dup <> if do a @ i $@ over execute loop else 2drop then ;

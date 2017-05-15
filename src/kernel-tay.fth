@@ -216,9 +216,9 @@ create interpreters  ' execute , ' number , ' execute ,
 : ?exception   if cr ." Exception!" cr then ;
 : interpret-xt   1+ cells  interpreters + @ catch ?exception ;
 
-: [   state @ 1 - state !  ['] execute interpreters !  previous ; immediate
-: ]   state @ 1 + state !  ['] compile, interpreters !
-   also ['] compiler-words context ! ;
+: [   state @ 1 - state !  state @ 0 = if ['] execute interpreters ! previous then ; immediate
+: ]   state @ 1 + state !  state @ 1 = if ['] compile, interpreters !
+   also ['] compiler-words context ! then ;
 
 : ;   reveal compile exit [compile] [ ; immediate
 
