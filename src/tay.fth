@@ -69,3 +69,5 @@ js{} l-dicts $,
   : += dup $ n 0 2dup <> if do i over $ nth dup js. a @ >$ loop else 2drop then drop ;
 } ;
 \ : inc :( 1 + ); execute ;
+
+: nested { variable a { variable b } { variable b } } drop ;
