@@ -97,7 +97,6 @@ function Thread(IP)
 
 Thread.prototype.resume = function ()
 {
-    console.log("resuming thread at " + this.IP);
     try {
         return asmmodule.asmmain(this.IP, this.SP, this.RP, this);
     } catch (e) {
