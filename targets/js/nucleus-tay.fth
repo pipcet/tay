@@ -46,7 +46,6 @@ Pipe.prototype.wakeup = function ()
     this.deque = [];
 
     for (var thread of deque) {
-        console.log("waking up " + thread);
         thread.wakeup();
     }
 };
@@ -135,7 +134,8 @@ Reference.prototype.toString = function ()
     return "{ " + "X" + ":" + this.i + "}";
 };
 
-var global = this;
+if (typeof(global) === undefined)
+    this.global = this;
 
 var params = {
     memsize: 1024 * 1024,
@@ -151,12 +151,17 @@ var bye;
 var gInputLines = [];
 var resume_string = undefined;
 var put_string;
+var gStdinTasks = [];
 
 function forth_input(str)
 {
     str = str.replace(/\\n$/, "");
     gInputLines.push(str);
-    resume("//line");
+    var tasks = gStdinTasks;
+    gStdinTasks = [];
+    for (var t of tasks)
+        t.wakeup();
+    resume();
 }
 
 if (typeof(os) !== "undefined") {
@@ -193,7 +198,11 @@ if (typeof(os) !== "undefined") {
     });
     rl.on('line', function (data) {
         gInputLines.push(data);
-        resume("//line");
+        var tasks = gStdinTasks;
+        gStdinTasks = [];
+        for (var t of tasks)
+            t.wakeup();
+        resume();
     });
     put_string = console.log;
 } else if (typeof(snarf) !== "undefined") {
@@ -341,14 +350,15 @@ var load_address = {};
 var next_load_address = params.fsoff;
 var load_size = {};
 
-function load_file(heapu8, path)
+function load_file(heapu8, path, thread)
 {
     var str;
     var succ;
     read_file_async(path, function (str) {
         if (str === undefined || str === null) {
             loaded[path] = 1;
-            resume(path);
+            thread.wakeup();
+            resume();
             return;
         }
 
@@ -363,7 +373,8 @@ function load_file(heapu8, path)
 
         succ = true;
         loaded[path] = 1;
-        resume(path);
+        thread.wakeup();
+        resume();
     });
 
     if (succ)
@@ -375,7 +386,7 @@ function load_file(heapu8, path)
 
 var fhs = {}; /* file handles */
 
-function foreign_open_file(addr, u, mode)
+function foreign_open_file(addr, u, mode, thread)
 {
     var path = StringAt(addr.o, addr.i, u);
     //var mode = CStringAt(mode.o, mode.i);
@@ -385,7 +396,7 @@ function foreign_open_file(addr, u, mode)
     if (!loaded[path]) {
         loaded[path] = .5;
 
-        load_file(HEAP, path);
+        load_file(HEAP, path, thread);
     }
     if (loaded[path] == .5) {
         resume_string = path;
@@ -401,7 +412,7 @@ function foreign_open_file(addr, u, mode)
     return fileid;
 }
 
-function foreign_read_file(addr, u1, fileid)
+function foreign_read_file(addr, u1, fileid, thread)
 {
     var i;
 
@@ -421,6 +432,7 @@ function foreign_read_file(addr, u1, fileid)
                    str = read_line();
                else {
                    resume_string = "//line";
+                   gStdinTasks.push(thread);
                    return -2;
                }
            }
@@ -886,16 +898,12 @@ code open-file
     if (!(c instanceof Reference))
         c = new Reference(H, c);
 
-    //console.log("open-file " + c + z + addr + x );
-
-    addr = foreign_open_file(c, y, top);
+    addr = foreign_open_file(c, y, top, thread);
     if ((addr) == -2) {
-        SP = SP + 4;
-        S[SP] = IP;
-        SP = SP + 1;
-        S[SP] = RP;
-        SP = SP + 1;
-        S[SP] = word;
+        SP = SP + 3;
+        thread.SP = SP;
+        thread.IP = IP - 1;
+        thread.RP = RP;
 
         return SP;
     }
@@ -931,14 +939,12 @@ code read-file
         if ((c.o[c.i+12]) != 0)
             i = 0;
         else
-            i = foreign_read_file(addr, z, c);
+            i = foreign_read_file(addr, z, c, thread);
         if ((i) == -2) {
-            SP = SP + 4;
-            S[SP] = IP;
-            SP = SP + 1;
-            S[SP] = RP;
-            SP = SP + 1;
-            S[SP] = word;
+            SP = SP + 3;
+            thread.SP = SP;
+            thread.IP = IP - 1;
+            thread.RP = RP;
 
             return SP;
         }
@@ -1196,7 +1202,7 @@ code jsnew()
 
     //console.log(S[SP] + "(" + typeof(S[SP]) + ")");
     //console.log(args + "(" + typeof(args) + ")");
-    S[SP] = new S[SP](...args);
+    S[SP] = new S[SP](/*...args*/);
 end-code
 
 code find-own-level
