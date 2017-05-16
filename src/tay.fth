@@ -7,13 +7,13 @@ variable () js[] () !
 : immediate immediate ; immediate
 : ) () @ $? execute ;
 
-: js) () @ $> drop js-markers @ $> sp@ 1+ - js() ;
+: js) () @ $> drop js-markers @ $> sp@ 1- - negate js() ;
 : js( sp@ js-markers @ >$ ['] js) () @ >$ ;
 
-: js{}) () @ $> drop js-markers @ $> sp@ 1+ - js{}() ;
+: js{}) () @ $> drop js-markers @ $> sp@ 1- - negate js{}() ;
 : js{}( sp@ js-markers @ >$ ['] js{}) () @ >$ ;
 
-: jsnew) () @ $> drop js-markers @ $> sp@ 1+ - jsnew() ;
+: jsnew) () @ $> drop js-markers @ $> sp@ 1- - negate jsnew() ;
 : jsnew( sp@ js-markers @ >$ ['] jsnew) () @ >$ ;
 
 : $$ parse-name js"" $@ ; immediate

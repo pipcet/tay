@@ -37,7 +37,7 @@ variable  temp
 ?: 2drop   drop drop ;
 : 3drop   2drop drop ;
 
-?: r@   rp@ cell+ @ ;
+?: r@   rp@ cell - @ ;
 
 ?: swap   >r temp ! r> temp @ ;
 ?: over   >r >r r@ r> temp ! r> temp @ ;

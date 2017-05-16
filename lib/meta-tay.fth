@@ -101,7 +101,7 @@ include target-tay.fth
 
 : host   only forth definitions host-image ;
 
-include asm.fth
+include asm-tay.fth
 include lib/xforward.fth
 
 only forth definitions also meta

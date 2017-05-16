@@ -3,7 +3,7 @@ drop
 
 parse-name : header, docol, ]   parse-name header, docol, ] exit [ reveal
 
-: immediate   -1 latestxt >nfa ! ; immediate
+: immediate   -1 latestxt >nfa ! ;
 : \   refill drop ; immediate
 
 \ This is the first file to be loaded and compiled by the kernel.
@@ -164,7 +164,7 @@ create base  10 ,
 
 : decimal   10 base ! ;
 
-: depth   sp0 sp@ - cell / 1- ;
+: depth   sp@ sp0 - cell / 1- ;
 
 : variable create cell allot ;
 
@@ -182,7 +182,7 @@ variable leaves
    leaves >resolve@  leaves !  postpone unloop ; compile-only
 : loop   1 postpone literal postpone +loop ; compile-only
 
-: j   rp@ 3 cells + @ ;
+: j   rp@ 3 cells - @ ;
 
 create env-words  0 , ' included-files ,
 : env-query   dup if drop execute -1 then ;

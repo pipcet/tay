@@ -272,7 +272,9 @@ function foreign_putchar(c)
         if (gLine.startsWith("Undefined")) {
             var i;
             for (i = 0; i < 4096; i++)
-                 console.log(i + ": " + HEAP[i]);
+                console.log(i + ": " + HEAP[i]);
+            for (i = 96 * 1024; i < 96 * 1024 + 4096; i++)
+                console.log(i + ": " + HEAP[i]);
         }
         gLine = "";
     } else {
@@ -489,18 +491,20 @@ function asmmain(IP, SP, RP, thread)
 {
     var word = 0;
     var H = HEAP;
+    var S = HEAP;
+    var R = HEAP;
 
     var f = [
 end-code
 
 code exit
-    IP = H[RP];
-    RP = RP+1;
+    IP = R[RP];
+    RP = RP - 1;
 end-code
 
 code sp@
-    SP = SP-1;
-    H[SP] = SP+1;
+    SP = SP + 1;
+    S[SP] = SP - 1;
 end-code
 
 code sp!
@@ -508,50 +512,50 @@ code sp!
 end-code
 
 code rp@
-    SP = SP-1;
-    H[SP] = RP;
+    SP = SP + 1;
+    S[SP] = RP;
 end-code
 
 code rp!
     RP = top;
-    SP = SP+1;
+    SP = SP - 1;
 end-code
 
 code dodoes
-    SP = SP-1;
-    H[SP] = add(word, 5);
-    RP = RP-1;
-    H[RP] = IP;
+    SP = SP + 1;
+    S[SP] = add(word, 5);
+    RP = RP + 1;
+    R[RP] = IP;
     IP = deref(word, 3);
 end-code
 
 code docol
-    RP = RP-1;
-    H[RP] = IP;
+    RP = RP + 1;
+    R[RP] = IP;
     IP = add(word, 5);
 end-code
 
 code dovar
-    SP = SP-1;
-    H[SP] = add(word, 5);
+    SP = SP + 1;
+    S[SP] = add(word, 5);
 end-code
 
 code docon
-    SP = SP-1;
-    H[SP] = deref(word, 5);
+    SP = SP + 1;
+    S[SP] = deref(word, 5);
 end-code
 
 code dodef
     word = deref(word, 5);
-    RP = RP-1;
-    H[RP] = IP;
+    RP = RP + 1;
+    R[RP] = IP;
     IP = new Reference([0, word, 1024], 1);
 end-code
 
 code 0branch
     //console.log("0branch " + top);
     addr = deref(IP, 0);
-    SP = SP+1;
+    SP = SP - 1;
     if (top instanceof Reference)
       IP = add(IP, 1);
     else if (top == 0)
@@ -565,15 +569,15 @@ code branch
 end-code
 
 code (literal)
-    SP = SP-1;
-    H[SP] = deref(IP, 0);
+    SP = SP + 1;
+    S[SP] = deref(IP, 0);
     IP = add(IP, 1);
 end-code
 
 code !
-    SP = SP+1;
-    x = H[SP];
-    SP = SP+1;
+    SP = SP - 1;
+    x = S[SP];
+    SP = SP - 1;
     if (top instanceof Reference)
         top.o[top.i] = x;
     else
@@ -583,70 +587,70 @@ end-code
 
 code @
     if (top instanceof Reference)
-        H[SP] = top.o[top.i];
+        S[SP] = top.o[top.i];
     else
-        H[SP] = H[top];
-    //console.log("@ " + top + " " + H[SP]);
+        S[SP] = H[top];
+    //console.log("@ " + top + " " + S[SP]);
 end-code
 
 code +
-    SP = SP+1;
-    H[SP] = add(H[SP], top);
+    SP = SP - 1;
+    S[SP] = add(S[SP], top);
 end-code
 
 code js+
-    SP = SP + 1;
-    H[SP] = H[SP] + top;
+    SP = SP - 1;
+    S[SP] = S[SP] + top;
 end-code
 
 code negate
-    H[SP] = sub(0, top);
-    //console.log("negate " + top + " = " + H[SP]);
+    S[SP] = sub(0, top);
+    //console.log("negate " + top + " = " + S[SP]);
 end-code
 
 code -
-    SP = SP+1;
-    H[SP] = sub(H[SP], top);
+    SP = SP - 1;
+    S[SP] = sub(S[SP], top);
 end-code
 
 code >r  ( x -- ) ( R: -- x )
-    SP = SP + 1;
-    RP = RP - 1;
-    H[RP] = top;
+    SP = SP - 1;
+    RP = RP + 1;
+    R[RP] = top;
 end-code
 
 code r> ( -- x ) ( R: x -- )
-    x = H[RP];
-    RP = RP + 1;
-    SP = SP - 1;
-    H[SP] = x;
+    x = R[RP];
+    RP = RP - 1;
+    SP = SP + 1;
+    S[SP] = x;
 end-code
 
 code 2r>
-    x = H[RP];
-    RP = RP + 1;
-    y = H[RP];
-    RP = RP + 1;
-    SP = SP - 1;
-    H[SP] = y;
-    SP = SP - 1;
-    H[SP] = x;
+    x = R[RP];
+    RP = RP - 1;
+    y = R[RP];
+    RP = RP - 1;
+    SP = SP + 1;
+    S[SP] = y;
+    SP = SP + 1;
+    S[SP] = x;
 end-code
 
 code 2>r
-    SP = SP + 1;
-    y = H[SP];
-    SP = SP + 1;
-    RP = RP - 1;
-    H[RP] = y;
-    RP = RP - 1;
-    H[RP] = top;
+    SP = SP - 1;
+    y = S[SP];
+    SP = SP - 1;
+    RP = RP + 1;
+    R[RP] = y;
+    RP = RP + 1;
+    R[RP] = top;
 end-code
 
 code c!
-    SP = SP+1;
-    x = H[SP];
-    SP = SP+1;
+    SP = SP - 1;
+    x = S[SP];
+    SP = SP - 1;
     if (top instanceof Reference)
         top.o[top.i] = x;
     else
@@ -656,43 +660,43 @@ end-code
 
 code c@
     if (top instanceof Reference)
-        H[SP] = top.o[top.i]&255;
+        S[SP] = top.o[top.i]&255;
     else
-        H[SP] = H[top]&255;
-    //console.log("c@ " + top + " " + H[SP]);
+        S[SP] = H[top]&255;
+    //console.log("c@ " + top + " " + S[SP]);
 end-code
 
 code (loop)
-    ////console.log("loop " + H[RP] + " " + H[RP+1]);
+    //console.log("loop " + R[RP] + " " + R[RP - 1]);
 
-    H[RP] = add(H[RP], 1);
-    SP = SP-1;
-    if ((H[RP] instanceof Reference) &&
-             H[RP].i >= H[RP+1].i)
-        H[SP] = -1;
-    else if (H[RP] instanceof Reference)
-        H[SP] = 0;
-    else if (H[RP] >= H[RP+1])
-        H[SP] = -1;
+    R[RP] = add(R[RP], 1);
+    SP = SP + 1;
+    if ((R[RP] instanceof Reference) &&
+             R[RP].i >= R[RP - 1].i)
+        S[SP] = -1;
+    else if (R[RP] instanceof Reference)
+        S[SP] = 0;
+    else if (R[RP] >= R[RP - 1])
+        S[SP] = -1;
     else
-        H[SP] = 0;
-    ////console.log("loop " + H[SP]);
+        S[SP] = 0;
+    ////console.log("loop " + S[SP]);
 end-code
 
 code 2rdrop
-    RP = RP+2;
+    RP = RP - 2;
 end-code
 
 code emit
-    SP = SP+1;
+    SP = SP - 1;
     foreign_putchar (top);
 end-code
 
 \ optional words
 
 code dup
-    SP = SP-1;
-    H[SP] = top;
+    SP = SP + 1;
+    S[SP] = top;
 end-code
 
 code 0=
@@ -704,7 +708,7 @@ code 0=
         c = -1;
     else
         c = 0;
-    H[SP] = c;
+    S[SP] = c;
 end-code
 
 code 0<>
@@ -716,7 +720,7 @@ code 0<>
         c = 0;
     else
         c = -1;
-    H[SP] = c;
+    S[SP] = c;
 end-code
 
 code 0<
@@ -728,130 +732,130 @@ code 0<
         c = -1;
     else
         c = 0;
-    H[SP] = c;
+    S[SP] = c;
 end-code
 
 code <
     var c;
-    SP = SP+1;
-    ////console.log("< " + top + " " + H[SP]);
+    SP = SP - 1;
+    ////console.log("< " + top + " " + S[SP]);
     if (top instanceof Reference)
-        c = (top.i > H[SP].i) ? -1 : 0;
-    else if ((top>>0) > (H[SP]>>0))
+        c = (top.i > S[SP].i) ? -1 : 0;
+    else if ((top>>0) > (S[SP]>>0))
         c = -1;
     else
         c = 0;
-    H[SP] = c;
+    S[SP] = c;
 end-code
 
 code rot
-    H[SP] = H[SP+2];
-    H[SP+2] = H[SP+1];
-    H[SP+1] = top;
+    S[SP] = S[SP - 2];
+    S[SP - 2] = S[SP - 1];
+    S[SP - 1] = top;
 end-code
 
 code -rot
-    H[SP] = H[SP+1];
-    H[SP+1] = H[SP+2];
-    H[SP+2] = top;
+    S[SP] = S[SP - 1];
+    S[SP - 1] = S[SP - 2];
+    S[SP - 2] = top;
 end-code
 
 code nip
-    SP = SP+1;
-    H[SP] = top;
+    SP = SP - 1;
+    S[SP] = top;
 end-code
 
 code drop
-    SP = SP+1;
+    SP = SP - 1;
 end-code
 
 code 2dup
-    SP=SP-2;
-    H[SP+1] = H[SP+3];
-    H[SP] = top;
+    SP=SP + 2;
+    S[SP - 1] = S[SP - 3];
+    S[SP] = top;
 end-code
 
 code ?dup
     if (top) {
-        SP = SP-1;
-        H[SP] = top;
+        SP = SP + 1;
+        S[SP] = top;
     }
 end-code
 
 code swap
-    H[SP] = H[SP+1];
-    H[SP+1] = top;
+    S[SP] = S[SP - 1];
+    S[SP - 1] = top;
 end-code
 
 code over
-    SP = SP-1;
-    H[SP] = H[SP+2];
+    SP = SP + 1;
+    S[SP] = S[SP - 2];
 end-code
 
 code invert
     ////console.log("invert " + top);
-    H[SP] = ~(top);
+    S[SP] = ~(top);
 end-code
 
 code xor
-    SP=SP+1;
-    H[SP] = H[SP]^top;
+    SP=SP - 1;
+    S[SP] = S[SP]^top;
 end-code
 
 code or
-    SP=SP+1;
-    H[SP] = H[SP]|top;
+    SP=SP - 1;
+    S[SP] = S[SP]|top;
 end-code
 
 code and
-    SP=SP+1;
-    H[SP] = H[SP]&top;
+    SP=SP - 1;
+    S[SP] = S[SP]&top;
 end-code
 
 code nand
-    SP=SP+1;
-    ////console.log("nand " + top + " " + H[SP]);
-    H[SP] = ~(H[SP]&top);
+    SP=SP - 1;
+    ////console.log("nand " + top + " " + S[SP]);
+    S[SP] = ~(S[SP]&top);
 end-code
 
 code =
-    SP=SP+1;
-    ////console.log("= " + top + " " + H[SP]);
+    SP=SP - 1;
+    ////console.log("= " + top + " " + S[SP]);
     if ((top instanceof Reference) &&
-        H[SP].i == top.i)
-        H[SP] = -1;
+        S[SP].i == top.i)
+        S[SP] = -1;
     else
-        H[SP] = ((H[SP]) == (top)) ? -1 : 0;
+        S[SP] = ((S[SP]) == (top)) ? -1 : 0;
 end-code
 
 code <>
-    SP=SP+1;
-    ////console.log("<> " + top + " " + H[SP]);
+    SP=SP - 1;
+    ////console.log("<> " + top + " " + S[SP]);
     if ((top instanceof Reference) &&
-        H[SP].i == top.i)
-        H[SP] = 0;
+        S[SP].i == top.i)
+        S[SP] = 0;
     else
-        H[SP] = ((H[SP]) != (top)) ? -1 : 0;
+        S[SP] = ((S[SP]) != (top)) ? -1 : 0;
 end-code
 
 code 1+
-    H[SP] = add(top, 1);
+    S[SP] = add(top, 1);
 end-code
 
 code 2*
-    H[SP] = add(top, top);
+    S[SP] = add(top, top);
 end-code
 
 code *
-    SP=SP+1;
-    H[SP] = imul(top, H[SP]);
+    SP=SP - 1;
+    S[SP] = imul(top, S[SP]);
 end-code
 
 code tuck
-    SP=SP-1;
-    H[SP+1] = H[SP+2];
-    H[SP+2] = top;
-    H[SP] = top;
+    SP=SP + 1;
+    S[SP - 1] = S[SP - 2];
+    S[SP - 2] = top;
+    S[SP] = top;
 end-code
 
 code bye
@@ -859,16 +863,16 @@ code bye
 end-code
 
 code close-file
-    H[SP] = 0;
+    S[SP] = 0;
 end-code
 
 code open-file
     var c;
-    SP = SP+1;
-    y = H[SP];
-    SP = SP+1;
-    c = H[SP];
-    SP = SP+1;
+    SP = SP - 1;
+    y = S[SP];
+    SP = SP - 1;
+    c = S[SP];
+    SP = SP - 1;
 
     if (!(c instanceof Reference))
         c = new Reference(H, c);
@@ -877,33 +881,33 @@ code open-file
 
     addr = foreign_open_file(c, y, top);
     if ((addr) == -2) {
-        SP = SP-4;
-        H[SP] = IP;
-        SP = SP-1;
-        H[SP] = RP;
-        SP = SP-1;
-        H[SP] = word;
+        SP = SP + 4;
+        S[SP] = IP;
+        SP = SP + 1;
+        S[SP] = RP;
+        SP = SP + 1;
+        S[SP] = word;
 
         return SP;
     }
-    SP = SP-1;
-    H[SP] = addr;
-    SP = SP-1;
+    SP = SP + 1;
+    S[SP] = addr;
+    SP = SP + 1;
     if ((addr) == 0)
-        H[SP] = 1;
+        S[SP] = 1;
     else
-        H[SP] = 0;
-    //console.log("read-file " + H[SP]);
+        S[SP] = 0;
+    //console.log("read-file " + S[SP]);
 end-code
 
 code read-file
     var c;
-    c = H[SP];
-    SP = SP+1;
-    z = H[SP];
-    SP = SP+1;
-    addr = H[SP];
-    SP = SP+1;
+    c = S[SP];
+    SP = SP - 1;
+    z = S[SP];
+    SP = SP - 1;
+    addr = S[SP];
+    SP = SP - 1;
 
     //console.log("read-file " + addr + " " + z + " " + c + " -> " + i);
     if (!(c instanceof Reference))
@@ -920,12 +924,12 @@ code read-file
         else
             i = foreign_read_file(addr, z, c);
         if ((i) == -2) {
-            SP = SP-4;
-            H[SP] = IP;
-            SP = SP-1;
-            H[SP] = RP;
-            SP = SP-1;
-            H[SP] = word;
+            SP = SP + 4;
+            S[SP] = IP;
+            SP = SP + 1;
+            S[SP] = RP;
+            SP = SP + 1;
+            S[SP] = word;
 
             return SP;
         }
@@ -934,55 +938,55 @@ code read-file
             z = (x-y);
         for (i = 0; (i>>>0) < (z>>>0); i = (i+1)) {
             addr.o[addr.i+i] = c.o[c.i+32+y+i];
+            //console.log(String.fromCharCode(addr.o[addr.i+i]));
         }
         c.o[c.i+4] = y + i;
     }
 
-    SP = SP-1;
-    H[SP] = i;
+    SP = SP + 1;
+    S[SP] = i;
     //console.log("read-file " + addr + " " + z + " " + c + " -> " + i);
-    SP = SP-1;
-    H[SP] = 0;
+    SP = SP + 1;
+    S[SP] = 0;
 end-code
 
 code js-array
-    SP = SP-1;
-    H[SP] = [];
-    for (var i = 0; i < 32; i++) H[i] = 0;
+    SP = SP + 1;
+    S[SP] = [];
 end-code
 
 code js-in
-    SP = SP+1;
+    SP = SP - 1;
     //console.log(top + "(" + typeof(top) + ")");
-    //console.log(H[SP] + "(" + typeof(H[SP]) + ")");
-    H[SP] = ((typeof(H[SP]) === "object") && (top in H[SP])) ? -1 : 0;
+    //console.log(S[SP] + "(" + typeof(S[SP]) + ")");
+    S[SP] = ((typeof(S[SP]) === "object") && (top in S[SP])) ? -1 : 0;
 end-code
 
 code js-object
-    SP = SP-1;
-    H[SP] = {};
+    SP = SP + 1;
+    S[SP] = {};
 end-code
 
 code $ref
-    SP = SP+1;
-    H[SP] = new Reference(H[SP], top);
+    SP = SP - 1;
+    S[SP] = new Reference(S[SP], top);
 end-code
 
 code $o
-    H[SP] = top.o;
+    S[SP] = top.o;
 end-code
 
 code $i
-    H[SP] = top.i;
+    S[SP] = top.i;
 end-code
 
 code js.
-    SP = SP+1;
+    SP = SP - 1;
     console.log(top); // + "(" + typeof(top) + ")");
 end-code
 
 code jsexp
-    SP = SP+1;
+    SP = SP - 1;
     if (typeof top === "number")
         console.log(top);
     else if (typeof top === "string")
@@ -990,74 +994,74 @@ code jsexp
 end-code
 
 code $!
-    SP = SP+1;
-    H[SP][top] = H[SP+1];
-    SP = SP+2;
+    SP = SP - 1;
+    S[SP][top] = S[SP - 1];
+    SP = SP - 2;
 end-code
 
 code $@
-    SP = SP+1;
-    H[SP] = H[SP][top];
+    SP = SP - 1;
+    S[SP] = S[SP][top];
 end-code
 
 code $here
-    H[SP] = top.length;
+    S[SP] = top.length;
 end-code
 
 code $#
-    H[SP] = top.length;
+    S[SP] = top.length;
 end-code
 
 code $0
-    H[SP] = top[0];
+    S[SP] = top[0];
 end-code
 
 code $?
-    H[SP] = top[top.length-1];
+    S[SP] = top[top.length-1];
 end-code
 
 code $last
-    H[SP] = top[top.length-1];
+    S[SP] = top[top.length-1];
 end-code
 
 code $truncate
-    SP = SP+1;
-    while (top.length > H[SP])
+    SP = SP - 1;
+    while (top.length > S[SP])
         top.pop();
-    SP = SP+1;
+    SP = SP - 1;
 end-code
 
 code $#!
-    SP = SP+1;
-    while (top.length > H[SP])
+    SP = SP - 1;
+    while (top.length > S[SP])
         top.pop();
-    SP = SP+1;
+    SP = SP - 1;
 end-code
 
 code $,
-    SP = SP+1;
-    top.push(H[SP]);
-    SP = SP+1;
+    SP = SP - 1;
+    top.push(S[SP]);
+    SP = SP - 1;
 end-code
 
 code $in
     var res = [];
     for (var prop in top)
         res.push(prop);
-    H[SP] = res;
+    S[SP] = res;
 end-code
 
 code $of
     var res = [];
     for (var prop of top)
         res.push(prop);
-    H[SP] = res;
+    S[SP] = res;
 end-code
 
 code $>
     try {
         var x = top.pop();
-        H[SP] = x;
+        S[SP] = x;
     } catch (e) {
         thread.IP = IP - 1;
         thread.SP = SP;
@@ -1070,7 +1074,7 @@ end-code
 code <$
     try {
         var x = top.shift();
-        H[SP] = x;
+        S[SP] = x;
     } catch (e) {
         thread.IP = IP - 1;
         thread.SP = SP;
@@ -1081,132 +1085,132 @@ code <$
 end-code
 
 code >$
-    SP = SP+1;
-    top.push(H[SP]);
-    SP = SP+1;
+    SP = SP - 1;
+    top.push(S[SP]);
+    SP = SP - 1;
 end-code
 
 code $<
-    SP = SP+1;
-    top.unshift(H[SP]);
-    SP = SP+1;
+    SP = SP - 1;
+    top.unshift(S[SP]);
+    SP = SP - 1;
 end-code
 
 code &
-    SP = SP+1;
-    H[SP] = new Reference(H[SP], top);
+    SP = SP - 1;
+    S[SP] = new Reference(S[SP], top);
 end-code
 
 code ref
-    SP = SP+1;
-    H[SP] = new Reference(H[SP], top);
+    SP = SP - 1;
+    S[SP] = new Reference(S[SP], top);
 end-code
 
 code js""
     var ret = "";
-    SP = SP+1;
-    if (!(H[SP] instanceof Reference))
-        H[SP] = new Reference(H, H[SP]);
+    SP = SP - 1;
+    if (!(S[SP] instanceof Reference))
+        S[SP] = new Reference(H, S[SP]);
     for (var i = 0; i < top; i++)
-        ret += String.fromCharCode(H[SP].o[H[SP].i + i]);
-    H[SP] = ret;
+        ret += String.fromCharCode(S[SP].o[S[SP].i + i]);
+    S[SP] = ret;
 end-code
 
 code fth""
     if (typeof(top) === "number" && top !== 0) {
         var i = 0;
         for (i = 0; i < 64; i++)
-            console.log("rstk " + i + " = " + H[RP+i]);
+            console.log("rstk " + i + " = " + R[RP+i]);
         for (i = 0; i < 4096; i++)
             console.log(i + ": " + HEAP[i]);
-        for (i = 65536; i < 65536 + 4096; i++)
+        for (i = 96 * 1024; i < 96 * 1024 + 4096; i++)
             console.log(i + ": " + HEAP[i]);
         console.log("forthifying " + top + typeof(top));
     }
-    H[SP] = [];
+    S[SP] = [];
     for (var i = 0; i < top.length; i++)
-        H[SP][i+1] = top.charCodeAt(i);
-    H[SP] = new Reference(H[SP], 1);
-    SP = SP-1;
-    H[SP] = top.length || 0;
+        S[SP][i+1] = top.charCodeAt(i);
+    S[SP] = new Reference(S[SP], 1);
+    SP = SP + 1;
+    S[SP] = top.length || 0;
 end-code
 
 code js[]
-    SP = SP - 1;
-    H[SP] = [];
+    SP = SP + 1;
+    S[SP] = [];
 end-code
 
 code js{}
-    SP = SP - 1;
-    H[SP] = {};
+    SP = SP + 1;
+    S[SP] = {};
 end-code
 
 code js<>
-    SP = SP - 1;
-    H[SP] = new Pipe();
+    SP = SP + 1;
+    S[SP] = new Pipe();
 end-code
 
 code js()
     var args = [];
 
     for (i = 0; i < top; i++)
-        args.push(H[SP+top-i]);
+        args.push(S[SP+i-top]);
 
-    SP += top + 1;
+    SP -= top + 1;
 
-    //console.log(H[SP] + "(" + typeof(H[SP]) + ")");
+    //console.log(S[SP] + "(" + typeof(S[SP]) + ")");
     //console.log(args + "(" + typeof(args) + ")");
-    H[SP] = H[SP].apply(undefined, args);
+    S[SP] = S[SP].apply(undefined, args);
 end-code
 
 code js{}()
     var args = [];
 
     for (i = 0; i < top; i++)
-        args.push(H[SP+top-i]);
+        args.push(S[SP+i-top]);
 
-    SP += top + 1;
+    SP -= top + 1;
 
-    //console.log(H[SP] + "(" + typeof(H[SP]) + ")");
+    //console.log(S[SP] + "(" + typeof(S[SP]) + ")");
     //console.log(args + "(" + typeof(args) + ")");
     var t = args.shift();
-    H[SP] = H[SP].apply(t, args);
+    S[SP] = S[SP].apply(t, args);
 end-code
 
 code jsnew()
     var args = [];
 
     for (i = 0; i < top; i++)
-        args.push(H[SP+top-i]);
+        args.push(S[SP+i-top]);
 
-    SP += top + 1;
+    SP -= top + 1;
 
-    //console.log(H[SP] + "(" + typeof(H[SP]) + ")");
+    //console.log(S[SP] + "(" + typeof(S[SP]) + ")");
     //console.log(args + "(" + typeof(args) + ")");
-    H[SP] = new H[SP](...args);
+    S[SP] = new S[SP](...args);
 end-code
 
 code find-own-level
-    SP = SP + 1;
-    for (i = H[SP].length - 1; i >= 0; i--) {
-        if (H[SP][i].hasOwnProperty(top))
+    SP = SP - 1;
+    for (i = S[SP].length - 1; i >= 0; i--) {
+        if (S[SP][i].hasOwnProperty(top))
             break;
-     }
-     H[SP] = i;
+    }
+    S[SP] = i;
 end-code
 
 code js
-    SP = SP - 1;
-    H[SP] = global;
+    SP = SP + 1;
+    S[SP] = global;
 end-code
 
 code js===
-    SP = SP + 1;
-    //console.log(H[SP] + typeof(H[SP]) + "===" + top + typeof(top) + "?" + (H[SP] === top));
-    if (H[SP] === top)
-        H[SP] = -1;
+    SP = SP - 1;
+    //console.log(S[SP] + typeof(S[SP]) + "===" + top + typeof(top) + "?" + (S[SP] === top));
+    if (S[SP] === top)
+        S[SP] = -1;
     else
-        H[SP] = 0;
+        S[SP] = 0;
 end-code
 
 code fork
@@ -1214,11 +1218,11 @@ code fork
 
     gThreadDeque.push(nt);
 
-    nt.SP = nt.SP - 1;
-    H[nt.SP] = 0;
+    nt.SP = nt.SP + 1;
+    nt.S[nt.SP] = 0;
 
-    SP = SP - 1;
-    H[SP] = 1;
+    SP = SP + 1;
+    S[SP] = 1;
 end-code
 
 code yield
