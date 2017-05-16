@@ -82,14 +82,15 @@ MainScope.prototype = Object.create(Array.prototype);
 
 function Thread(IP)
 {
-    for (var p = top_of_memory; p < top_of_memory + 256; p++)
-        HEAP[p] = 0;
-    top_of_memory += 256;
-    this.SP = top_of_memory;
-    for (var p = top_of_memory; p < top_of_memory + 256; p++)
-        HEAP[p] = 0;
-    top_of_memory += 256;
-    this.RP = top_of_memory;
+    this.S = new Array();
+    for (var i = 0; i < 256; i++)
+        this.S[i] = 0;
+    this.SP = 0;
+
+    this.R = new Array();
+    for (var i = 0; i < 256; i++)
+        this.R[i] = 0;
+    this.RP = 256;
 
     this.IP = IP;
 }
@@ -467,7 +468,7 @@ function lbForth(stdlib, foreign, buffer)
         if ((a instanceof Reference) && (b instanceof Reference))
             return a.i - b.i;
         else if (a instanceof Reference)
-            return a.i - b;
+            return new Reference(a.o, a.i - b);
         else if (b instanceof Reference)
             return a - b.i;
         else
@@ -491,8 +492,8 @@ function asmmain(IP, SP, RP, thread)
 {
     var word = 0;
     var H = HEAP;
-    var S = HEAP;
-    var R = HEAP;
+    var S = thread.S;
+    var R = thread.R;
 
     var f = [
 end-code
@@ -504,19 +505,23 @@ end-code
 
 code sp@
     SP = SP + 1;
-    S[SP] = SP - 1;
+    S[SP] = new Reference(S, SP - 1);
 end-code
 
 code sp!
+    if (top instanceof Reference)
+        top = top.i;
     SP = top;
 end-code
 
 code rp@
     SP = SP + 1;
-    S[SP] = RP;
+    S[SP] = new Reference(R, RP);
 end-code
 
 code rp!
+    if (top instanceof Reference)
+        top = top.i;
     RP = top;
     SP = SP - 1;
 end-code
@@ -596,6 +601,11 @@ end-code
 code +
     SP = SP - 1;
     S[SP] = add(S[SP], top);
+end-code
+
+code -
+    SP = SP - 1;
+    S[SP] = sub(S[SP], top);
 end-code
 
 code js+
