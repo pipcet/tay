@@ -4,6 +4,7 @@
 variable js-markers js[] js-markers !
 variable () js[] () !
 
+: immediate immediate ; immediate
 : ) () @ $? execute ;
 
 : js) () @ $> drop js-markers @ $> sp@ 1+ - js() ;
@@ -31,6 +32,8 @@ js{} l-dicts $,
 : new{} >r js $$ Object $$ create js( r> ) ;
 : n{} ( proto previous -- new ) swap >r >r js $$ Object $$ create js( r> ) dup js" proto" r> -rot $! ;
 
+: {} l-dicts $? postpone literal postpone l-dicts postpone $? postpone n{} ; immediate
+
 : { l-dicts $? new{} dup l-dicts $, postpone literal postpone l-dicts postpone $? postpone n{} postpone l-dicts postpone $, ; immediate
 : } l-dicts $> drop postpone l-dicts postpone $> ; immediate
 
@@ -38,11 +41,9 @@ js{} l-dicts $,
 
 : compose swap latest dp @ js[] 8 $ref dp ! s" " header,, docol, rot , rot , ['] exit , dp ! latest swap dup latest! ;
 
-\ 3 ' 1+ ' 1+ compose execute js.
+: create-reference swap l-dicts $? begin over over js" proto" $@ js=== 0= while js" __proto__" $@ repeat swap drop swap $ref ;
 
-: create-reference swap drop l-dicts $? swap $ref ;
-
-: {}-variable parse-name js"" l-dicts $# 1- constant-function over constant-function compose ['] create-reference compose l-dicts $? rot $!; immediate
+: {}-variable parse-name js"" l-dicts $? constant-function over constant-function compose ['] create-reference compose l-dicts $? rot $! ;
 
 : variable state @ 0 = if variable else {}-variable then ; immediate
 
@@ -68,8 +69,14 @@ js{} l-dicts $,
   : n a @ $# ;
   : nth a @ swap $@ ;
   : for a @ $# 0 2dup <> if do a @ i $@ over execute loop else 2drop then ;
-  : += dup $ n 0 2dup <> if do i over $ nth dup js. a @ >$ loop else 2drop then drop ;
+  : += dup $ n 0 2dup <> if do i over $ nth a @ >$ loop else 2drop then drop ;
 } ;
 \ : inc :( 1 + ); execute ;
 
+list $$ proto value list{}
+
 : nested { variable a { variable b } { variable b } } drop ;
+
+\ : heap [ list js" proto" $@ l-dicts >$ ] variable here : compile a @ here @ $! here @ 1+ here ! ; {} ;
+: heap { variable here : compile this $ a @ here @ $! 1 here !+ ; } ;
+: times over 0 do dup execute loop 2drop ;

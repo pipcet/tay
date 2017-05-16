@@ -9,6 +9,68 @@ include targets/js/next-tay.fth
 
 start-code
 "use strict";
+var top_of_memory = 1024 * 1024;
+var gThreadDeque = [];
+
+function PipeException()
+{
+}
+
+function Pipe()
+{
+    Array.call(this);
+    this.deque = [];
+}
+
+Pipe.prototype = Object.create(Array.prototype);
+
+Pipe.prototype.pop = function ()
+{
+    if (this.length)
+        return Array.prototype.pop.call(this);
+    else
+        throw new PipeException();
+};
+
+Pipe.prototype.shift = function ()
+{
+    if (this.length)
+        return Array.prototype.shift.call(this);
+    else
+        throw new PipeException();
+};
+
+Pipe.prototype.wakeup = function ()
+{
+    var deque = this.deque;
+    this.deque = [];
+
+    for (var thread of deque) {
+        console.log("waking up " + thread);
+        thread.wakeup();
+    }
+};
+
+Pipe.prototype.wait = function (thread)
+{
+    this.deque.push(thread);
+};
+
+Pipe.prototype.push = function (x)
+{
+    Array.prototype.push.call(this, x);
+    if (this.length === 1)
+        this.wakeup();
+};
+
+Pipe.prototype.unshift = function (x)
+{
+    Array.prototype.unshift.call(this, x);
+    if (this.length === 1)
+        this.wakeup();
+};
+
+var gStdin = new Pipe();
 
 function MainScope()
 {
@@ -17,6 +79,35 @@ function MainScope()
 }
 
 MainScope.prototype = Object.create(Array.prototype);
+
+function Thread(IP)
+{
+    for (var p = top_of_memory; p < top_of_memory + 256; p++)
+        HEAP[p] = 0;
+    top_of_memory += 256;
+    this.SP = top_of_memory;
+    for (var p = top_of_memory; p < top_of_memory + 256; p++)
+        HEAP[p] = 0;
+    top_of_memory += 256;
+    this.RP = top_of_memory;
+
+    this.IP = IP;
+}
+
+Thread.prototype.resume = function ()
+{
+    console.log("resuming thread at " + this.IP);
+    try {
+        return asmmodule.asmmain(this.IP, this.SP, this.RP, this);
+    } catch (e) {
+        put_string(e);
+    }
+};
+
+Thread.prototype.wakeup = function ()
+{
+    gThreadDeque.push(this);
+};
 
 function Reference(o, i)
 {
@@ -45,8 +136,6 @@ Reference.prototype.toString = function ()
 };
 
 var global = this;
-var DICT = new Array();
-
 
 var params = {
     memsize: 1024 * 1024,
@@ -166,8 +255,6 @@ if (typeof(os) !== "undefined") {
         forth_output(str + "\\n");
     };
 }
-
-var heap = new ArrayBuffer(params.memsize);
 
 /* console I/O */
 
@@ -356,7 +443,6 @@ function foreign_read_file(addr, u1, fileid)
 
 function lbForth(stdlib, foreign, buffer)
 {
-    "use asm";
     var imul = stdlib.Math.imul;
     var add = function (a, b)
     {
@@ -399,12 +485,9 @@ function lbForth(stdlib, foreign, buffer)
     var foreign_bye = foreign.bye;
     var foreign_dump = foreign.dump;
 
-function asmmain(word, IP, SP, RP)
+function asmmain(IP, SP, RP, thread)
 {
-    word = word;
-    IP = IP;
-    SP = SP;
-    RP = RP;
+    var word = 0;
     var H = HEAP;
 
     var f = [
@@ -527,36 +610,36 @@ code -
 end-code
 
 code >r  ( x -- ) ( R: -- x )
-    SP = SP+1;
+    SP = SP + 1;
     RP = RP - 1;
     H[RP] = top;
 end-code
 
 code r> ( -- x ) ( R: x -- )
     x = H[RP];
-    RP = RP+1;
-    SP = SP-1;
+    RP = RP + 1;
+    SP = SP - 1;
     H[SP] = x;
 end-code
 
 code 2r>
     x = H[RP];
-    RP = RP+1;
+    RP = RP + 1;
     y = H[RP];
-    RP = RP+1;
-    SP = SP-1;
+    RP = RP + 1;
+    SP = SP - 1;
     H[SP] = y;
-    SP = SP-1;
+    SP = SP - 1;
     H[SP] = x;
 end-code
 
 code 2>r
-    SP = SP+1;
+    SP = SP + 1;
     y = H[SP];
-    SP = SP+1;
-    RP = RP-1;
+    SP = SP + 1;
+    RP = RP - 1;
     H[RP] = y;
-    RP = RP-1;
+    RP = RP - 1;
     H[RP] = top;
 end-code
 
@@ -972,11 +1055,29 @@ code $of
 end-code
 
 code $>
-    H[SP] = top.pop();
+    try {
+        var x = top.pop();
+        H[SP] = x;
+    } catch (e) {
+        thread.IP = IP - 1;
+        thread.SP = SP;
+        thread.RP = RP;
+        top.wait(thread);
+        return SP;
+    }
 end-code
 
 code <$
-    H[SP] = top.shift();
+    try {
+        var x = top.shift();
+        H[SP] = x;
+    } catch (e) {
+        thread.IP = IP - 1;
+        thread.SP = SP;
+        thread.RP = RP;
+        top.wait(thread);
+        return SP;
+    }
 end-code
 
 code >$
@@ -1038,6 +1139,11 @@ end-code
 code js{}
     SP = SP - 1;
     H[SP] = {};
+end-code
+
+code js<>
+    SP = SP - 1;
+    H[SP] = new Pipe();
 end-code
 
 code js()
@@ -1103,14 +1209,38 @@ code js===
         H[SP] = 0;
 end-code
 
+code fork
+    var nt = new Thread(IP);
+
+    gThreadDeque.push(nt);
+
+    nt.SP = nt.SP - 1;
+    H[nt.SP] = 0;
+
+    SP = SP - 1;
+    H[SP] = 1;
+end-code
+
+code yield
+    thread.IP = IP;
+    thread.SP = SP;
+    thread.RP = RP;
+
+    gThreadDeque.push(thread);
+
+    return 0;
+end-code
+
 start-code
     ];
 
     var start = Date.now();
     while (1) {
-        f[deref(word,4)|0]();
         word = deref(IP, 0);
         IP = add(IP, 1);
+        var ret = f[deref(word,4)|0]();
+        if (ret !== undefined)
+            return ret;
     }
 
     return 0;
@@ -1120,66 +1250,35 @@ start-code
 }
 
 var asmmodule;
-var global_sp;
 
-function run(turnkey)
-{
-    asmmodule = lbForth({
-            Uint8Array: Uint8Array,
-            Uint32Array: Uint32Array,
-            Math: {
-                imul: Math.imul || function(a, b) {
-                    var ah = (a >>> 16) & 0xffff;
-                    var al = a & 0xffff;
-                    var bh = (b >>> 16) & 0xffff;
-                    var bl = b & 0xffff;
-                    return ((al * bl) + (((ah * bl + al * bh) << 16) >>> 0)|0);
-                }
+asmmodule = lbForth({
+        Uint8Array: Uint8Array,
+        Uint32Array: Uint32Array,
+        Math: {
+            imul: Math.imul || function(a, b) {
+                var ah = (a >>> 16) & 0xffff;
+                var al = a & 0xffff;
+                var bh = (b >>> 16) & 0xffff;
+                var bl = b & 0xffff;
+                return ((al * bl) + (((ah * bl + al * bh) << 16) >>> 0)|0);
             }
-        }, {
-            clog: clog,
-            putchar: foreign_putchar,
-            open_file: foreign_open_file,
-            read_file: foreign_read_file,
-            bye: foreign_bye,
-            dump: foreign_dump
-        }, heap);
+        }
+    }, {
+        clog: clog,
+        putchar: foreign_putchar,
+        open_file: foreign_open_file,
+        read_file: foreign_read_file,
+        bye: foreign_bye,
+        dump: foreign_dump
+    });
 
-    //try {
-        return global_sp = asmmodule.asmmain(turnkey,
-        new Reference(HEAP, 0), params.sp0, params.rp0);
-    //} catch (e) {
-    //    put_string(e);
-    //}
-}
 
-function resume(str)
+function resume()
 {
-    if (str !== resume_string)
-        return;
-
-    if (str === undefined)
-        return;
-
-    resume_string = undefined;
-
-    var sp = global_sp;
-    if (!global_sp)
-        return;
-
-    var word = HEAP[sp];
-    sp += 1;
-    var RP = HEAP[sp];
-    sp += 1;
-    var IP = HEAP[sp];
-    sp += 1;
-    var SP = sp;
-
-    try {
-        global_sp = 0;
-        global_sp = asmmodule.asmmain(word, IP, SP, RP);
-    } catch (e) {
-        put_string(e);
+    while (gThreadDeque.length) {
+        var thread = gThreadDeque.shift();
+        var ret = thread.resume();
     }
 }
+
 end-code

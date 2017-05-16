@@ -13,9 +13,9 @@ also meta t' dp0 previous  constant 'dp0
    ." c += `HEAP[" 'sp0 . ." +5] = params.sp0;\n`;" cr
    ." c += `HEAP[" 'rp0 . ." +5] = params.rp0;\n`;" cr
    ." c += `HEAP[" 'dp0 . ." +5] = 64 * 1024;\n`" cr
-   ." c += `run(" 'turnkey . ." );\n`" cr
+   ." c += `(new Thread(" 'turnkey . ." + 5)).wakeup();\n`" cr
+   ." c += `resume();\n`" cr
    ." console.log(`var HEAP = []; for (var i = 0; i < 1024*1024; i++) HEAP[i] = 0;`);" cr
-   ." c += `for (var i = 0; i < 64*1024; i++) DICT[i] = 0;`;" cr
    ." for (var i = 0; i < 64 * 1024; i++) {" cr
    ."     if (HEAP[i])" cr
    ."         console.log(`HEAP[${i}] = ` + ((typeof HEAP[i] === 'string') ? HEAP[i].toSource().replace(/^.*?String./, '').replace(/\)[^)]*?$/, '').replace(/\)[^)]*?$/, '') : HEAP[i]) + `;`);" cr
