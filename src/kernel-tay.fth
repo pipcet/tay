@@ -258,7 +258,7 @@ variable limit
 
 defer parsed
 : (parsed) ( a u -- )   find-name interpret-xt ;
-: ?stack   sp0 sp@ cell+ < abort" Stack underflow" ;
+: ?stack   ;
 : interpret   begin parse-name dup while parsed ?stack repeat 2drop ;
 : interpreting   begin refill while interpret ?prompt repeat ;
 
