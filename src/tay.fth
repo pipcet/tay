@@ -47,9 +47,12 @@ js{} l-dicts $,
 
 : variable state @ 0 = if variable else {}-variable then ; immediate
 
-: : state @ 0 = if ['] : execute else latest dp @ parse-name 2dup js[] 8 $ref dp ! header,, docol, js"" [ ' ] , ] then ; immediate
+variable ;s
+js[] ;s !
 
-: ; state @ 1 <> if ['] exit , [ ' [ , ] latest swap l-dicts $? swap $! dp ! dup latest! else ['] ; execute then ; immediate
+: ;after: ;s @ $> drop state @ 1 <> if ['] exit , [ ' [ , ] latest swap l-dicts $? swap $! dp ! dup latest! else ['] ; execute then ; immediate
+: : state @ 0 = if ['] : execute else latest dp @ parse-name 2dup js[] 8 $ref dp ! header,, docol, js"" [ ' ] , ] then ['] ;after: ;s @ >$ ; immediate
+: ; ;s @ $? execute ;after: immediate
 
 : {}-execute ( scope xt -- * ) swap l-dicts $, execute l-dicts $> drop ;
 : $ dup js" proto" $@ parse-name js"" $@ {}-execute ;
@@ -57,8 +60,8 @@ js{} l-dicts $,
 
 : this l-dicts $? ;
 
-: :( latest dp @ s" " 2dup js[] 8 $ref dp ! header,, docol, js"" drop ['] ] execute ; immediate
-: ); ['] exit , ['] [ execute latest >r dp ! dup latest! r> postpone literal ; immediate
+: 0; ;s @ $> drop ['] exit , ['] [ execute latest >r dp ! dup latest! r> postpone literal ; immediate
+: :0 latest dp @ s" " 2dup js[] 8 $ref dp ! header,, docol, js"" drop ['] ] execute ['] 0; ;s @ >$ ; immediate
 
 : list {
   variable a js[] a !
