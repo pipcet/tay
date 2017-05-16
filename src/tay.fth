@@ -45,6 +45,8 @@ js{} l-dicts $,
 
 : {}-variable parse-name js"" l-dicts $? constant-function over constant-function compose ['] create-reference compose l-dicts $? rot $! ;
 
+: {}-named-value l-dicts $? constant-function over dup >r constant-function compose ['] create-reference compose ['] @ compose l-dicts $? rot $! postpone l-dicts postpone $? r> postpone literal postpone $! ;
+
 : variable state @ 0 = if variable else {}-variable then ; immediate
 
 variable ;s
@@ -62,6 +64,11 @@ js[] ;s !
 
 : 0; ;s @ $> drop ['] exit , ['] [ execute latest >r dp ! dup latest! r> postpone literal ; immediate
 : :0 latest dp @ s" " 2dup js[] 8 $ref dp ! header,, docol, js"" drop ['] ] execute ['] 0; ;s @ >$ ; immediate
+
+: collect-names begin parse-name js"" dup js" )" js=== 0= while over >$ repeat drop ;
+
+
+: ( js[] collect-names begin dup $# while dup $> {}-named-value repeat drop ; immediate
 
 : list {
   variable a js[] a !
