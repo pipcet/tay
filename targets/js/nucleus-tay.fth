@@ -92,6 +92,9 @@ function Thread(IP)
     this.RP = 256;
 
     this.IP = IP;
+
+    this["l-dicts"] = [{}];
+    this["l-dicts"][0].proto = this["l-dicts"][0];
 }
 
 Thread.prototype.resume = function ()

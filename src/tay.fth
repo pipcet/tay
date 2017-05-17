@@ -26,9 +26,6 @@ variable () js[] () !
 
 : $$. dup parse-name js"" $@ $( bind over ) ; immediate
 
-js[] to l-dicts
-js{} l-dicts $,
-
 : new{} >r js $$ Object $$ create js( r> ) ;
 : n{} ( proto previous -- new ) swap >r >r js $$ Object $$ create js( r> ) dup js" proto" r> -rot $! ;
 

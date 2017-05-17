@@ -177,7 +177,7 @@ create search-paths 2 cells allot
 create included-files  2 cells allot
 create context  9 cells allot
 
-0 value l-dicts
+: l-dicts this-thread s" l-dicts" js"" $@ ;
 
 : r@+   r> r> dup cell+ >r @ swap >r ;
 : search-context ( a u context -- a 0 | xt ? )   >r begin r@+ ?dup while
