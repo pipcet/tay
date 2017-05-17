@@ -67,8 +67,10 @@ js[] ;s !
 
 : collect-names begin parse-name js"" dup js" )" js=== 0= while over >$ repeat drop ;
 
+: create-values begin dup $# while dup $> {}-named-value repeat ;
 
-: ( js[] collect-names begin dup $# while dup $> {}-named-value repeat drop ; immediate
+
+: ( js[] collect-names create-values drop ; immediate
 
 : list {
   variable a js[] a !
