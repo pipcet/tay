@@ -99,8 +99,7 @@ create squote   128 allot
 
 : under   postpone >r ' compile, postpone r> ; immediate
 
-: bits/cell   32
-   postpone literal ; immediate
+: bits/cell 32 postpone literal ; immediate
 
 : rshift   >r 0 begin r> dup bits/cell < while 1+ >r
            2* over 0< if 1+ then under 2* repeat drop nip ;
