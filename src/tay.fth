@@ -92,3 +92,5 @@ list $$ proto value list{}
 \ : heap [ list js" proto" $@ l-dicts >$ ] variable here : compile a @ here @ $! here @ 1+ here ! ; {} ;
 : heap { variable here : compile this $ a @ here @ $! 1 here !+ ; } ;
 : times over 0 do dup execute loop 2drop ;
+
+: sleep { ( ms ) js $$ setTimeout js( wakeup-closure ms ) wait } drop ;

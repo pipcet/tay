@@ -1250,6 +1250,24 @@ code yield
     return 0;
 end-code
 
+code wait
+    thread.IP = IP;
+    thread.SP = SP;
+    thread.RP = RP;
+
+    return 0;
+end-code
+
+code this-thread
+    SP = SP + 1;
+    S[SP] = thread;
+end-code
+
+code wakeup-closure
+    SP = SP + 1;
+    S[SP] = function () { thread.wakeup(); resume(); };
+end-code
+
 start-code
     ];
 
